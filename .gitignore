@@ -1,0 +1,21 @@
+# ---- Material bruto / privado (NUNCA publicar) ----
+_originais_privados/
+Desafio 2.txt
+
+# ---- Credenciais e chaves ----
+*.pem
+*.ppk
+*.csv
+.aws/
+credentials*
+*_accessKeys*
+
+# ---- Ambiente ----
+.env
+.env.*
+node_modules/
+
+# ---- Sistema ----
+.DS_Store
+Thumbs.db
+desktop.ini
