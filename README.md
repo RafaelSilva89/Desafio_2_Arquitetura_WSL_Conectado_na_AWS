@@ -76,6 +76,12 @@ O laboratório tem dois lados. O **local** é onde você escreve, constrói e se
                                               └───────────────────────────────────┘
 ```
 
+**A mesma jornada, em um olhar — do terminal local até o registry de imagens:**
+
+![Terminal local no WSL 2 conectado por túnel SSM à EC2 bia-dev, que roda o contêiner na porta 3001 e publica a imagem no Amazon ECR](imagens/Visao_geral_arquitetura.png)
+
+*Recorte do infográfico do desafio, gerado com apoio de IA. O diagrama detalhado da rede — VPC, subnet e Security Group — está em [6.3](#63-a-arquitetura-na-aws).*
+
 Ao final das 12 etapas você terá:
 
 | # | Entrega | Feito na |
