@@ -1,5 +1,7 @@
 # Desafio 2 — Arquitetura WSL 2 conectada à AWS
 
+![Desafio 2 — AWS: a jornada da arquitetura BIA-DEV, do ambiente local integrado de forma segura à nuvem AWS](imagens/Banner_desafio_2.png)
+
 ![WSL 2](https://img.shields.io/badge/WSL%202-Ubuntu%2024.04%20LTS-E95420?logo=ubuntu&logoColor=white)
 ![Docker](https://img.shields.io/badge/Docker-Desktop%20%2B%20Compose-2496ED?logo=docker&logoColor=white)
 ![AWS CLI](https://img.shields.io/badge/AWS%20CLI-v2-232F3E?logo=amazonwebservices&logoColor=white)
@@ -14,7 +16,7 @@ Este repositório é a resolução do **Desafio 2** da Mentoria *Desafios Fundam
 
 Ele foi escrito para ser **seguido**, não apenas lido. As **Etapas 0 a 12** estão na ordem exata de execução, e cada uma responde três perguntas: **onde** o comando roda, **o que** você deve ver na tela e **o que fazer se der erro**. Partindo de um Windows sem nada instalado, seguindo as etapas na ordem, você chega ao mesmo resultado — e desliga tudo no final, sem deixar conta aberta.
 
-Se você nunca mexeu com AWS, comece pela [seção 2](#2-pré-requisitos-custo-e-convenções) e siga em linha reta. Se você só quer entender **por que** cada decisão foi tomada, pule para [Decisões técnicas e o que aprendi](#6-decisões-técnicas-e-o-que-aprendi).
+Se você nunca mexeu com AWS, comece pela [seção 3](#3-pré-requisitos-custo-e-convenções) e siga em linha reta. Se você só quer entender **por que** cada decisão foi tomada, pule para [Decisões técnicas e o que aprendi](#7-decisões-técnicas-e-o-que-aprendi).
 
 ---
 
@@ -23,8 +25,9 @@ Se você nunca mexeu com AWS, comece pela [seção 2](#2-pré-requisitos-custo-e
 **Parte A — Antes de começar**
 
 - [1. O que você vai construir](#1-o-que-você-vai-construir)
-- [2. Pré-requisitos, custo e convenções](#2-pré-requisitos-custo-e-convenções)
-- [3. Os dois conceitos que sustentam tudo](#3-os-dois-conceitos-que-sustentam-tudo)
+- [2. 🗺️ Roadmap da solução](#2--roadmap-da-solução)
+- [3. Pré-requisitos, custo e convenções](#3-pré-requisitos-custo-e-convenções)
+- [4. Os dois conceitos que sustentam tudo](#4-os-dois-conceitos-que-sustentam-tudo)
 
 **Parte B — O passo a passo**
 
@@ -46,11 +49,11 @@ Se você nunca mexeu com AWS, comece pela [seção 2](#2-pré-requisitos-custo-e
 
 **Parte C — Depois de concluir**
 
-- [4. Checklist de entrega](#4-checklist-de-entrega)
-- [5. Problemas encontrados e como resolvi](#5-problemas-encontrados-e-como-resolvi)
-- [6. Decisões técnicas e o que aprendi](#6-decisões-técnicas-e-o-que-aprendi)
-- [7. Segurança neste repositório](#7-segurança-neste-repositório)
-- [8. Créditos e referências](#8-créditos-e-referências)
+- [5. Checklist de entrega](#5-checklist-de-entrega)
+- [6. Problemas encontrados e como resolvi](#6-problemas-encontrados-e-como-resolvi)
+- [7. Decisões técnicas e o que aprendi](#7-decisões-técnicas-e-o-que-aprendi)
+- [8. Segurança neste repositório](#8-segurança-neste-repositório)
+- [9. Créditos e referências](#9-créditos-e-referências)
 
 ---
 
@@ -80,7 +83,7 @@ O laboratório tem dois lados. O **local** é onde você escreve, constrói e se
 
 ![Terminal local no WSL 2 conectado por túnel SSM à EC2 bia-dev, que roda o contêiner na porta 3001 e publica a imagem no Amazon ECR](imagens/Visao_geral_arquitetura.png)
 
-*Recorte do infográfico do desafio, gerado com apoio de IA. O diagrama detalhado da rede — VPC, subnet e Security Group — está em [6.3](#63-a-arquitetura-na-aws).*
+*Recorte do infográfico do desafio, gerado com apoio de IA. O diagrama detalhado da rede — VPC, subnet e Security Group — está em [7.3](#73-a-arquitetura-na-aws).*
 
 Ao final das 12 etapas você terá:
 
@@ -101,7 +104,24 @@ Ao final das 12 etapas você terá:
 
 ---
 
-## 2. Pré-requisitos, custo e convenções
+## 2. 🗺️ Roadmap da solução
+
+O desafio inteiro é um ciclo de três tempos: **construir localmente**, **provar identidade e subir a carga**, **publicar a imagem**. As 13 etapas da Parte B são o detalhamento desses três tempos.
+
+![Ciclo de vida da aplicação containerizada: desenvolvimento local, autenticação e build, e push da imagem no ECR](imagens/Roadmap_ciclo_de_vida.png)
+
+*Recorte do infográfico do desafio, gerado com apoio de IA.*
+
+| Fase | Etapas | Tempo no ciclo | O que entrega | Termina quando |
+| --- | :-: | --- | --- | --- |
+| **1. Estação local** | [0](#etapa-0--preparar-o-windows-wsl-2-e-docker-desktop) e [1](#etapa-1--instalar-a-stack-dentro-do-ubuntu) | Desenvolvimento Local | WSL 2 · Ubuntu 24.04 com AWS CLI v2, Session Manager Plugin, Node.js e SAM | `aws --version` responde dentro do Ubuntu |
+| **2. Identidade e código** | [2](#etapa-2--criar-o-usuário-iam-no-console) a [4](#etapa-4--clonar-o-projeto-bia-na-máquina-local) | Autenticação e Build | Usuário IAM, credenciais temporárias de 12 h e o projeto BIA clonado | `aws sts get-caller-identity` devolve o seu ARN |
+| **3. Infra e execução na nuvem** | [5](#etapa-5--criar-o-security-group-bia-dev) a [10](#etapa-10--rodar-a-aplicação-bia-na-ec2) | Autenticação e Build | Security Group, role `role-acesso-ssm`, EC2 `bia-dev` e a BIA em contêiner | A aplicação responde no IP público, porta 3001 |
+| **4. Publicação e encerramento** | [11](#etapa-11--build-e-push-da-imagem-para-o-ecr) e [12](#etapa-12--limpar-tudo-para-não-gerar-custo) | Push Imagem no ECR | Imagem no ECR privado e todos os recursos destruídos | O ECR lista a imagem `bia` e nada mais gera custo |
+
+---
+
+## 3. Pré-requisitos, custo e convenções
 
 ### O que você precisa antes de começar
 
@@ -109,7 +129,7 @@ Ao final das 12 etapas você terá:
 | --- | --- |
 | **Windows 10 (2004+) ou Windows 11** | O WSL 2 é instalado na [Etapa 0](#etapa-0--preparar-o-windows-wsl-2-e-docker-desktop); você não precisa ter nada pronto |
 | **Conta AWS ativa** | Com acesso ao Console como root ou administrador, para criar o usuário IAM |
-| **Cerca de 8 GB de RAM** | Este laboratório foi executado em um Intel Core i3 de 2 núcleos com 8 GB — o motivo da escolha do WSL 2 está em [6.1](#61-por-que-wsl-2-e-não-uma-vm-tradicional) |
+| **Cerca de 8 GB de RAM** | Este laboratório foi executado em um Intel Core i3 de 2 núcleos com 8 GB — o motivo da escolha do WSL 2 está em [7.1](#71-por-que-wsl-2-e-não-uma-vm-tradicional) |
 | **Tempo** | Cerca de **1h30** somando todas as etapas, sendo uns 20 min só de instalação na Etapa 0 |
 
 ### Sobre o custo
@@ -138,11 +158,11 @@ E todos os identificadores nos exemplos são **fictícios**. Substitua pelos seu
 | `formacao_aws` | O nome do **usuário IAM e do profile** — escolha o seu na [Etapa 2](#etapa-2--criar-o-usuário-iam-no-console) e mantenha em todos os comandos |
 | `us-east-1` | A **região** usada em todo o laboratório |
 
-> Os prints deste repositório estão **censurados** nas regiões que continham Account ID, ARNs e IDs de recursos. Ver [seção 7](#7-segurança-neste-repositório).
+> Os prints deste repositório estão **censurados** nas regiões que continham Account ID, ARNs e IDs de recursos. Ver [seção 8](#8-segurança-neste-repositório).
 
 ---
 
-## 3. Os dois conceitos que sustentam tudo
+## 4. Os dois conceitos que sustentam tudo
 
 Antes do primeiro comando, entenda o conceito que sustenta o desafio inteiro — e que explica **todos** os erros que você pode encontrar pelo caminho. Todo acesso na AWS passa por **duas camadas independentes e sequenciais**:
 
@@ -231,9 +251,9 @@ Baixe o [Docker Desktop](https://www.docker.com/products/docker-desktop/) e inst
 
 `Settings` → `Resources` → `WSL Integration` → marcar *Enable integration with my default WSL distro* → ativar a chave ao lado do **Ubuntu** → `Apply & restart`.
 
-> 💡 **Dica:** é este passo que faz o comando `docker` existir dentro do Ubuntu. O Docker Desktop mantém **uma única engine** compartilhada entre Windows e Linux — e é justamente por isso que o WSL 2 pesa menos que uma VM tradicional (ver [6.1](#61-por-que-wsl-2-e-não-uma-vm-tradicional)).
+> 💡 **Dica:** é este passo que faz o comando `docker` existir dentro do Ubuntu. O Docker Desktop mantém **uma única engine** compartilhada entre Windows e Linux — e é justamente por isso que o WSL 2 pesa menos que uma VM tradicional (ver [7.1](#71-por-que-wsl-2-e-não-uma-vm-tradicional)).
 >
-> ⚠️ **Se der erro:** `docker: command not found` dentro do Ubuntu significa que a integração não foi ativada. Ver [5.3](#53-docker-invisível-dentro-do-wsl).
+> ⚠️ **Se der erro:** `docker: command not found` dentro do Ubuntu significa que a integração não foi ativada. Ver [6.3](#63-docker-invisível-dentro-do-wsl).
 
 ### 3. Ter uma conta AWS ativa
 
@@ -334,7 +354,7 @@ aws --version && aws ssm --version && node -v && sam --version
 
 **Por que esta etapa existe:** o seu terminal ainda não é ninguém para a AWS. Antes de qualquer comando, precisa existir uma identidade — e essa identidade precisa carregar as permissões do que vamos fazer.
 
-Toda requisição do CLI responde a duas perguntas, que são as duas camadas da [seção 3](#3-os-dois-conceitos-que-sustentam-tudo):
+Toda requisição do CLI responde a duas perguntas, que são as duas camadas da [seção 4](#4-os-dois-conceitos-que-sustentam-tudo):
 
 ```text
 1. QUEM ESTÁ FAZENDO ESTA REQUISIÇÃO?   →  Autenticação (credenciais)
@@ -392,7 +412,7 @@ Use "--profile formacao_aws" to use the new credentials.
 
 ![Policy de acesso local anexada ao usuário](imagens/Primeiro_aws_login.png)
 
-> ⚠️ **Se aparecer `gio: Operation not supported`:** é o WSL não conseguindo abrir o navegador do Windows. **Não é fatal** — o próprio comando imprime a URL de autorização; copie e cole no navegador. Ver [5.4](#54-erro-gio-operation-not-supported-no-aws-login).
+> ⚠️ **Se aparecer `gio: Operation not supported`:** é o WSL não conseguindo abrir o navegador do Windows. **Não é fatal** — o próprio comando imprime a URL de autorização; copie e cole no navegador. Ver [6.4](#64-erro-gio-operation-not-supported-no-aws-login).
 
 ### 2. Definir o contexto do shell
 
@@ -403,7 +423,7 @@ export AWS_PROFILE=formacao_aws
 export AWS_DEFAULT_REGION=us-east-1
 ```
 
-> 💡 **Leia isto agora, não depois.** Os scripts do projeto BIA (Etapas 6, 7 e 8) chamam `aws ec2 ...` **sem** a flag `--profile`. Sem essas duas variáveis exportadas, eles usam o profile *default* — que está vazio — e reportam que a VPC, a subnet e o Security Group "não existem", mesmo com tudo criado corretamente. Ver [5.1](#51-o-script-não-encontrava-vpc-subnet-nem-security-group).
+> 💡 **Leia isto agora, não depois.** Os scripts do projeto BIA (Etapas 6, 7 e 8) chamam `aws ec2 ...` **sem** a flag `--profile`. Sem essas duas variáveis exportadas, eles usam o profile *default* — que está vazio — e reportam que a VPC, a subnet e o Security Group "não existem", mesmo com tudo criado corretamente. Ver [6.1](#61-o-script-não-encontrava-vpc-subnet-nem-security-group).
 >
 > Para não precisar repetir a cada terminal novo, acrescente as duas linhas ao fim do seu `~/.bashrc`.
 
@@ -507,7 +527,7 @@ criar_role_ssm.sh   lancar_ec2_zona_a.sh   validar_recursos_zona_a.sh   ...
 
 > **Onde executar:** 🌐 Console AWS · **Tempo:** ~3 min
 
-**Por que esta etapa existe:** este é o **Gate 1** da [seção 3](#3-os-dois-conceitos-que-sustentam-tudo) — a camada de comunicação. Sem ele, o navegador nunca alcança a aplicação, por mais correta que esteja a permissão IAM.
+**Por que esta etapa existe:** este é o **Gate 1** da [seção 4](#4-os-dois-conceitos-que-sustentam-tudo) — a camada de comunicação. Sem ele, o navegador nunca alcança a aplicação, por mais correta que esteja a permissão IAM.
 
 `EC2` → `Security Groups` → `Create security group`
 
@@ -536,7 +556,7 @@ criar_role_ssm.sh   lancar_ec2_zona_a.sh   validar_recursos_zona_a.sh   ...
 
 **Por que esta etapa existe:** o Security Group resolveu a **comunicação**; a role resolve a **autorização da instância** para conversar com os outros serviços da AWS. Sem ela, a EC2 não fala com o SSM nem com o ECR — e você não consegue entrar na máquina.
 
-Lembre da [seção 3](#3-os-dois-conceitos-que-sustentam-tudo): **usuário para pessoa, role para máquina**. A EC2 não guarda Access Key em disco; ela veste uma role.
+Lembre da [seção 4](#4-os-dois-conceitos-que-sustentam-tudo): **usuário para pessoa, role para máquina**. A EC2 não guarda Access Key em disco; ela veste uma role.
 
 ```bash
 ./scripts/criar_role_ssm.sh
@@ -633,7 +653,7 @@ export AWS_PROFILE=formacao_aws
 export AWS_DEFAULT_REGION=us-east-1
 ```
 
-Depois rode o script novamente. Detalhes em [5.1](#51-o-script-não-encontrava-vpc-subnet-nem-security-group).
+Depois rode o script novamente. Detalhes em [6.1](#61-o-script-não-encontrava-vpc-subnet-nem-security-group).
 
 **✅ Checkpoint:** nenhuma linha `[ERRO]` na saída.
 
@@ -779,7 +799,7 @@ amazon-ssm-agent  (PID 1427) ─ serviço base, escuta pedidos de conexão da AW
                   └── su - ec2-user ─ ambiente de trabalho seguro
 ```
 
-> ⚠️ **Para sair**, `exit` precisa ser executado mais de uma vez, porque há camadas empilhadas: `ec2-user` → `ssm-user` → terminal local. Ver [5.5](#55-sair-do-ssm-exige-mais-de-um-exit).
+> ⚠️ **Para sair**, `exit` precisa ser executado mais de uma vez, porque há camadas empilhadas: `ec2-user` → `ssm-user` → terminal local. Ver [6.5](#65-sair-do-ssm-exige-mais-de-um-exit).
 
 ### 9B — SSH tradicional, o caminho alternativo
 
@@ -869,7 +889,7 @@ echo $SSH_CLIENT
 
 A porta **22** no `$SSH_CLIENT` é o carimbo: essa sessão entrou pelo SSH, não pelo SSM.
 
-> 💡 A comparação completa entre os dois caminhos, e a razão de o SSM ser preferível, está em [6.2](#62-ssm--ssh-o-comparativo-completo).
+> 💡 A comparação completa entre os dois caminhos, e a razão de o SSM ser preferível, está em [7.2](#72-ssm--ssh-o-comparativo-completo).
 
 **✅ Checkpoint:** você viu o prompt `[ec2-user@ip-...]$` pelo menos pelo caminho 9A, e `ps -ef --forest | grep ssm` mostra o `ssm-session-worker`.
 
@@ -926,7 +946,7 @@ http://203.0.113.10:3001
 
 **Por que esta etapa existe:** esta é a entrega do Dia 2 — construir a imagem **na sua máquina local** e publicá-la no registry privado da AWS. Note que aqui saímos da EC2 e voltamos ao WSL.
 
-> 💡 Se você ainda está dentro da EC2, digite `exit` até voltar ao prompt `dev@wsl:~$` — lembrando que são [mais de um `exit`](#55-sair-do-ssm-exige-mais-de-um-exit).
+> 💡 Se você ainda está dentro da EC2, digite `exit` até voltar ao prompt `dev@wsl:~$` — lembrando que são [mais de um `exit`](#65-sair-do-ssm-exige-mais-de-um-exit).
 
 ### 1. Criar o repositório no ECR
 
@@ -949,7 +969,7 @@ aws ecr get-login-password --region us-east-1 --profile formacao_aws \
 Login Succeeded
 ```
 
-> ⚠️ **Erro de `docker: command not found` ou de daemon?** A integração do Docker Desktop com o WSL não está ligada. Volte à [Etapa 0](#etapa-0--preparar-o-windows-wsl-2-e-docker-desktop) ou veja [5.3](#53-docker-invisível-dentro-do-wsl).
+> ⚠️ **Erro de `docker: command not found` ou de daemon?** A integração do Docker Desktop com o WSL não está ligada. Volte à [Etapa 0](#etapa-0--preparar-o-windows-wsl-2-e-docker-desktop) ou veja [6.3](#63-docker-invisível-dentro-do-wsl).
 
 ### 3. Build, tag e push
 
@@ -1009,7 +1029,7 @@ aws ecr list-images --repository-name bia --region us-east-1 --profile formacao_
 
 **Por que esta etapa existe:** uma EC2 esquecida ligada continua sendo cobrada. Esta é a etapa que quase nenhum tutorial documenta e que todo mundo deveria executar.
 
-> 📌 **Complemento didático.** Não fazia parte do registro original do desafio. Execute **depois** de tirar seus prints e validar as entregas do [checklist](#4-checklist-de-entrega).
+> 📌 **Complemento didático.** Não fazia parte do registro original do desafio. Execute **depois** de tirar seus prints e validar as entregas do [checklist](#5-checklist-de-entrega).
 
 A ordem importa: recursos em uso não podem ser apagados.
 
@@ -1111,7 +1131,7 @@ E confira o `Billing` → `Cost Explorer` no console nos dias seguintes, para co
 
 # Parte C — Depois de concluir
 
-## 4. Checklist de entrega
+## 5. Checklist de entrega
 
 **Parte 1 — Fundação**
 
@@ -1145,11 +1165,11 @@ E confira o `Billing` → `Cost Explorer` no console nos dias seguintes, para co
 
 ---
 
-## 5. Problemas encontrados e como resolvi
+## 6. Problemas encontrados e como resolvi
 
 Esta seção é, para mim, a mais valiosa do repositório: nenhum desses erros aparece nos tutoriais. Cada um também está sinalizado, em linha, na etapa onde ele acontece.
 
-### 5.1. O script não encontrava VPC, subnet nem Security Group
+### 6.1. O script não encontrava VPC, subnet nem Security Group
 
 *Acontece na [Etapa 7](#etapa-7--validar-os-pré-requisitos).*
 
@@ -1172,7 +1192,7 @@ export AWS_DEFAULT_REGION=us-east-1
 
 **Aprendizado:** o AWS CLI não tem "contexto implícito". Quando um script não passa `--profile`, quem define o contexto é a variável de ambiente.
 
-### 5.2. AccessDenied ao criar a role pelo script
+### 6.2. AccessDenied ao criar a role pelo script
 
 *Acontece na [Etapa 6](#etapa-6--criar-a-role-role-acesso-ssm).*
 
@@ -1190,7 +1210,7 @@ Os mesmos erros se repetiram para `CreateInstanceProfile`, `AddRoleToInstancePro
 
 **Solução:** anexar ao usuário uma *inline policy* com as sete ações IAM listadas na [Etapa 6](#etapa-6--criar-a-role-role-acesso-ssm).
 
-### 5.3. Docker invisível dentro do WSL
+### 6.3. Docker invisível dentro do WSL
 
 *Acontece nas [Etapas 0](#etapa-0--preparar-o-windows-wsl-2-e-docker-desktop) e [11](#etapa-11--build-e-push-da-imagem-para-o-ecr).*
 
@@ -1198,7 +1218,7 @@ O `docker build` falhava porque o Docker Desktop não estava exposto para a dist
 
 **Solução:** Docker Desktop → `Settings` → `Resources` → `WSL Integration` → marcar *Enable integration with my default WSL distro*, ativar a chave ao lado do Ubuntu → `Apply & restart`.
 
-### 5.4. Erro "gio: Operation not supported" no aws login
+### 6.4. Erro "gio: Operation not supported" no aws login
 
 *Acontece na [Etapa 3](#etapa-3--autenticar-o-terminal-na-aws).*
 
@@ -1210,7 +1230,7 @@ gio: https://us-east-1.signin.aws.amazon.com/v1/authorize?... : Operation not su
 
 **Não é um erro fatal.** O próprio comando imprime a URL de autorização — basta copiá-la e abrir no navegador do Windows. O fluxo continua normalmente e o profile é atualizado ao final.
 
-### 5.5. Sair do SSM exige mais de um exit
+### 6.5. Sair do SSM exige mais de um exit
 
 *Acontece nas [Etapas 9A](#etapa-9--entrar-na-máquina-remota-ssm-e-ssh) e [11](#etapa-11--build-e-push-da-imagem-para-o-ecr).*
 
@@ -1226,13 +1246,17 @@ sh-5.2$
 
 ---
 
-## 6. Decisões técnicas e o que aprendi
+## 7. Decisões técnicas e o que aprendi
 
 Esta parte não é necessária para executar o guia — é o registro do **porquê** de cada escolha.
 
-### 6.1. Por que WSL 2 e não uma VM tradicional
+### 7.1. Por que WSL 2 e não uma VM tradicional
 
 Essa foi a **primeira decisão técnica do desafio**, e ela nasceu de uma restrição real de recurso.
+
+![Notebook com 8 GB de RAM e processador i3, e duas VMs tradicionais descartadas por consumo excessivo de recursos](imagens/Restricao_hardware_wsl.png)
+
+*A restrição que descartou a VM tradicional. Recorte do infográfico do desafio, gerado com apoio de IA.*
 
 | Item | Especificação |
 | --- | --- |
@@ -1261,7 +1285,7 @@ O WSL 2 compartilha o kernel e faz alocação dinâmica de memória, e o Docker 
 
 Resultado prático: o mesmo aprendizado e a mesma superfície de comandos Linux, por uma fração do custo de memória — **adaptar a ferramenta à restrição sem abrir mão do objetivo de aprendizagem**. Todas as referências a "sua VM" neste guia correspondem à estação **WSL 2 + Ubuntu 24.04 LTS**.
 
-### 6.2. SSM × SSH: o comparativo completo
+### 7.2. SSM × SSH: o comparativo completo
 
 | Característica | SSH tradicional | AWS SSM (Session Manager) |
 | --- | --- | --- |
@@ -1276,7 +1300,7 @@ Resultado prático: o mesmo aprendizado e a mesma superfície de comandos Linux,
 
 **A inversão que explica tudo:** no SSH, *eu* bato na porta do servidor — por isso preciso abri-la. No SSM, o **agente dentro da EC2** é quem inicia a comunicação de saída com o serviço da AWS. Não há porta para abrir, e não há porta para atacar.
 
-### 6.3. A arquitetura na AWS
+### 7.3. A arquitetura na AWS
 
 ![Arquitetura da aplicação BIA-DEV na AWS](imagens/Arquitetura_oficial.jpg)
 
@@ -1296,7 +1320,7 @@ Resultado prático: o mesmo aprendizado e a mesma superfície de comandos Linux,
 | **ECR** | Registry privado de imagens Docker — destino da imagem construída no WSL |
 | **ECS · S3 · EB** | Serviços do ecossistema presentes no ambiente, usados nas etapas seguintes da formação |
 
-### 6.4. O que aprendi
+### 7.4. O que aprendi
 
 1. **Comunicação e autorização são camadas distintas.** Security Group responde *"eu chego lá?"*; IAM responde *"eu posso agir?"*. Depurar na ordem errada custa horas.
 
@@ -1316,7 +1340,7 @@ Resultado prático: o mesmo aprendizado e a mesma superfície de comandos Linux,
 
 ---
 
-## 7. Segurança neste repositório
+## 8. Segurança neste repositório
 
 Publicar um laboratório de nuvem exige o mesmo cuidado que operá-lo. O que foi feito antes deste repositório ir ao ar:
 
@@ -1330,6 +1354,7 @@ Publicar um laboratório de nuvem exige o mesmo cuidado que operá-lo. O que foi
 | **Anotações brutas fora do Git** | O arquivo de notas originais, que contém os dados reais, está no `.gitignore` |
 | **Prints originais fora do Git** | Guardados localmente em `_originais_privados/`, também ignorado |
 | **PDFs de apoio fora do Git** | Os PDFs usados como material de estudo exibem o Account ID e IDs de instância **reais**, sem tarja — `*.pdf` está no `.gitignore` |
+| **Infográfico completo fora do Git** | O pôster gerado por IA contém erros de escrita nos comandos (`aws log1n`, `nc2-user`) — só recortes conferidos em resolução nativa foram publicados |
 
 **Débitos reconhecidos, e que ficam como próximo passo:**
 
@@ -1341,7 +1366,7 @@ Documentar o que ainda não está ideal faz parte do trabalho: em segurança, o 
 
 ---
 
-## 8. Créditos e referências
+## 9. Créditos e referências
 
 **Formação**
 
