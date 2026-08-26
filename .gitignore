@@ -2,6 +2,12 @@
 _originais_privados/
 Desafio 2.txt
 
+# PDFs de apoio (contêm Account ID e IDs de recurso REAIS, sem tarja)
+*.pdf
+
+# Infográfico gerado por IA: contém erros de escrita nos comandos
+imagens/Guia_de_Arquitetura_de_Nuvem.png
+
 # ---- Credenciais e chaves ----
 *.pem
 *.ppk
@@ -19,3 +25,6 @@ node_modules/
 .DS_Store
 Thumbs.db
 desktop.ini
+
+# Rascunhos pessoais
+post-linkedin.txt
