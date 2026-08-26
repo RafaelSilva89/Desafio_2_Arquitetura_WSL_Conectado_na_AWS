@@ -25,7 +25,7 @@ Se você nunca mexeu com AWS, comece pela [seção 3](#3-pré-requisitos-custo-e
 **Parte A — Antes de começar**
 
 - [1. O que você vai construir](#1-o-que-você-vai-construir)
-- [2. 🗺️ Roadmap da solução](#2--roadmap-da-solução)
+- [2. 🗺 Roadmap da solução](#2--roadmap-da-solução)
 - [3. Pré-requisitos, custo e convenções](#3-pré-requisitos-custo-e-convenções)
 - [4. Os dois conceitos que sustentam tudo](#4-os-dois-conceitos-que-sustentam-tudo)
 
@@ -42,8 +42,8 @@ Se você nunca mexeu com AWS, comece pela [seção 3](#3-pré-requisitos-custo-e
 | [6](#etapa-6--criar-a-role-role-acesso-ssm) | 💻 | Criar a role `role-acesso-ssm` e destravar o `AccessDenied` |
 | [7](#etapa-7--validar-os-pré-requisitos) | 💻 | Validar VPC, subnet, Security Group e role |
 | [8](#etapa-8--lançar-a-ec2-bia-dev-via-script) | 💻 | Lançar a EC2 `bia-dev` por script e capturar ID e IP |
-| [9](#etapa-9--entrar-na-máquina-remota-ssm-e-ssh) | 💻 ☁️ | Entrar na máquina: SSM (principal) e SSH (alternativo) |
-| [10](#etapa-10--rodar-a-aplicação-bia-na-ec2) | ☁️ | Subir a aplicação BIA em contêiner e abrir no navegador |
+| [9](#etapa-9--entrar-na-máquina-remota-ssm-e-ssh) | 💻 ☁ | Entrar na máquina: SSM (principal) e SSH (alternativo) |
+| [10](#etapa-10--rodar-a-aplicação-bia-na-ec2) | ☁ | Subir a aplicação BIA em contêiner e abrir no navegador |
 | [11](#etapa-11--build-e-push-da-imagem-para-o-ecr) | 💻 | Build e push da imagem para o Amazon ECR |
 | [12](#etapa-12--limpar-tudo-para-não-gerar-custo) | 💻 | Limpar todos os recursos para não gerar custo |
 
@@ -104,7 +104,7 @@ Ao final das 12 etapas você terá:
 
 ---
 
-## 2. 🗺️ Roadmap da solução
+## 2. 🗺 Roadmap da solução
 
 O desafio inteiro é um ciclo de três tempos: **construir localmente**, **provar identidade e subir a carga**, **publicar a imagem**. As 13 etapas da Parte B são o detalhamento desses três tempos.
 
@@ -136,7 +136,7 @@ O desafio inteiro é um ciclo de três tempos: **construir localmente**, **prova
 
 Este laboratório usa **EC2**, **ECR** e **Systems Manager**. O Session Manager não tem custo adicional, mas **a instância EC2 e o armazenamento de imagens no ECR são cobrados** se você ultrapassar o Free Tier ou deixar os recursos ligados.
 
-> ⚠️ **Não pule a [Etapa 12](#etapa-12--limpar-tudo-para-não-gerar-custo).** Ela apaga tudo o que foi criado. Uma EC2 esquecida ligada continua sendo cobrada todo mês.
+> ⚠ **Não pule a [Etapa 12](#etapa-12--limpar-tudo-para-não-gerar-custo).** Ela apaga tudo o que foi criado. Uma EC2 esquecida ligada continua sendo cobrada todo mês.
 
 ### Como ler as etapas
 
@@ -145,7 +145,7 @@ Cada etapa começa dizendo **onde** o comando é executado. Confira o marcador a
 | Marcador | Onde você está | Como o prompt aparece |
 | :-: | --- | --- |
 | 💻 | **WSL local** — o Ubuntu dentro do seu Windows | `dev@wsl:~$` |
-| ☁️ | **EC2** — a máquina remota, na AWS | `[ec2-user@ip-172-31-15-143 ~]$` |
+| ☁ | **EC2** — a máquina remota, na AWS | `[ec2-user@ip-172-31-15-143 ~]$` |
 | 🌐 | **Console AWS** — o navegador | *(sem terminal)* |
 
 E todos os identificadores nos exemplos são **fictícios**. Substitua pelos seus:
@@ -253,7 +253,7 @@ Baixe o [Docker Desktop](https://www.docker.com/products/docker-desktop/) e inst
 
 > 💡 **Dica:** é este passo que faz o comando `docker` existir dentro do Ubuntu. O Docker Desktop mantém **uma única engine** compartilhada entre Windows e Linux — e é justamente por isso que o WSL 2 pesa menos que uma VM tradicional (ver [7.1](#71-por-que-wsl-2-e-não-uma-vm-tradicional)).
 >
-> ⚠️ **Se der erro:** `docker: command not found` dentro do Ubuntu significa que a integração não foi ativada. Ver [6.3](#63-docker-invisível-dentro-do-wsl).
+> ⚠ **Se der erro:** `docker: command not found` dentro do Ubuntu significa que a integração não foi ativada. Ver [6.3](#63-docker-invisível-dentro-do-wsl).
 
 ### 3. Ter uma conta AWS ativa
 
@@ -381,7 +381,7 @@ Toda requisição do CLI responde a duas perguntas, que são as duas camadas da 
 
 > 💡 **Dica:** a terceira policy é a que quase todo mundo esquece. Sem `SignInLocalDevelopmentAccess`, o `aws login` da próxima etapa simplesmente não autoriza a geração do token temporário.
 >
-> ⚠️ **Ainda falta uma permissão**, mas ela só vai fazer falta na [Etapa 6](#etapa-6--criar-a-role-role-acesso-ssm): a de **criar** roles IAM. Ela é adicionada lá, no momento exato em que o erro aparece — assim você vê a mensagem de erro real antes de aplicar a correção.
+> ⚠ **Ainda falta uma permissão**, mas ela só vai fazer falta na [Etapa 6](#etapa-6--criar-a-role-role-acesso-ssm): a de **criar** roles IAM. Ela é adicionada lá, no momento exato em que o erro aparece — assim você vê a mensagem de erro real antes de aplicar a correção.
 
 **✅ Checkpoint:** o usuário aparece em `IAM` → `Users` com as 3 policies listadas na aba `Permissions`.
 
@@ -412,7 +412,7 @@ Use "--profile formacao_aws" to use the new credentials.
 
 ![Policy de acesso local anexada ao usuário](imagens/Primeiro_aws_login.png)
 
-> ⚠️ **Se aparecer `gio: Operation not supported`:** é o WSL não conseguindo abrir o navegador do Windows. **Não é fatal** — o próprio comando imprime a URL de autorização; copie e cole no navegador. Ver [6.4](#64-erro-gio-operation-not-supported-no-aws-login).
+> ⚠ **Se aparecer `gio: Operation not supported`:** é o WSL não conseguindo abrir o navegador do Windows. **Não é fatal** — o próprio comando imprime a URL de autorização; copie e cole no navegador. Ver [6.4](#64-erro-gio-operation-not-supported-no-aws-login).
 
 ### 2. Definir o contexto do shell
 
@@ -544,7 +544,7 @@ criar_role_ssm.sh   lancar_ec2_zona_a.sh   validar_recursos_zona_a.sh   ...
 
 > 💡 **Dica:** a porta **3001** não é arbitrária — é a porta que o contêiner da aplicação BIA publica no host ([Etapa 10](#etapa-10--rodar-a-aplicação-bia-na-ec2)). Se você liberar outra, a aplicação sobe mas não responde, e o navegador fica carregando até dar timeout.
 >
-> ⚠️ **Ressalva:** liberar `Anywhere-IPv4` é aceitável em um laboratório de porta de aplicação. Em produção, essa origem seria restrita a um Load Balancer ou a uma faixa de IPs conhecida.
+> ⚠ **Ressalva:** liberar `Anywhere-IPv4` é aceitável em um laboratório de porta de aplicação. Em produção, essa origem seria restrita a um Load Balancer ou a uma faixa de IPs conhecida.
 
 **✅ Checkpoint:** o SG `bia-dev` aparece na lista com uma regra de entrada `TCP 3001`.
 
@@ -562,7 +562,7 @@ Lembre da [seção 4](#4-os-dois-conceitos-que-sustentam-tudo): **usuário para 
 ./scripts/criar_role_ssm.sh
 ```
 
-### ⚠️ Na primeira execução, o esperado é falhar assim
+### ⚠ Na primeira execução, o esperado é falhar assim
 
 ```text
 An error occurred (AccessDenied) when calling the CreateRole operation:
@@ -600,7 +600,7 @@ Os mesmos erros se repetem para `CreateInstanceProfile`, `AddRoleToInstanceProfi
 }
 ```
 
-> ⚠️ **Ressalva consciente:** `"Resource": "*"` é aceitável em um laboratório descartável, mas **não em produção**. O correto seria restringir o `Resource` aos ARNs específicos da role e do instance profile, e condicionar o `iam:PassRole` ao serviço `ec2.amazonaws.com`.
+> ⚠ **Ressalva consciente:** `"Resource": "*"` é aceitável em um laboratório descartável, mas **não em produção**. O correto seria restringir o `Resource` aos ARNs específicos da role e do instance profile, e condicionar o `iam:PassRole` ao serviço `ec2.amazonaws.com`.
 
 Com a policy no lugar, rode o script de novo:
 
@@ -637,7 +637,7 @@ aws iam get-role --role-name role-acesso-ssm --query "Role.Arn" --output text
 [OK] Tudo certo com a role 'role-acesso-ssm'
 ```
 
-### ⚠️ Se aparecer isto
+### ⚠ Se aparecer isto
 
 ```text
 [ERRO] Tenho um problema ao retornar a VPC default. Será se ela existe?
@@ -707,7 +707,7 @@ aws ec2 describe-instances \
 
 > 💡 **Dica:** guarde os dois valores em algum lugar. Onde este guia escrever `i-0abcd1234efgh5681`, use o **seu** ID; onde escrever `203.0.113.10`, use o **seu** IP.
 >
-> ⚠️ **A instância aparece sem IP público?** Aguarde alguns segundos e rode o comando de novo — o IP é atribuído durante a inicialização da máquina.
+> ⚠ **A instância aparece sem IP público?** Aguarde alguns segundos e rode o comando de novo — o IP é atribuído durante a inicialização da máquina.
 
 **✅ Checkpoint:** o comando retorna uma linha com um ID e um IP.
 
@@ -715,7 +715,7 @@ aws ec2 describe-instances \
 
 ## Etapa 9 — Entrar na máquina remota (SSM e SSH)
 
-> **Onde executar:** 💻 WSL local → ☁️ EC2 · **Tempo:** ~10 min
+> **Onde executar:** 💻 WSL local → ☁ EC2 · **Tempo:** ~10 min
 
 **Por que esta etapa existe:** o desafio pede **os dois caminhos**. Faça os dois justamente para entender por que um deles é melhor. O **9A (SSM) é o caminho principal**; o 9B existe para comparação.
 
@@ -799,13 +799,13 @@ amazon-ssm-agent  (PID 1427) ─ serviço base, escuta pedidos de conexão da AW
                   └── su - ec2-user ─ ambiente de trabalho seguro
 ```
 
-> ⚠️ **Para sair**, `exit` precisa ser executado mais de uma vez, porque há camadas empilhadas: `ec2-user` → `ssm-user` → terminal local. Ver [6.5](#65-sair-do-ssm-exige-mais-de-um-exit).
+> ⚠ **Para sair**, `exit` precisa ser executado mais de uma vez, porque há camadas empilhadas: `ec2-user` → `ssm-user` → terminal local. Ver [6.5](#65-sair-do-ssm-exige-mais-de-um-exit).
 
 ### 9B — SSH tradicional, o caminho alternativo
 
 Aqui a lógica se inverte: em vez de a máquina chamar a AWS, **é você que bate na porta dela** — e por isso é preciso **abrir uma regra de entrada**.
 
-> ⚠️ **Leia antes de começar:** a instância lançada na [Etapa 8](#etapa-8--lançar-a-ec2-bia-dev-via-script) **não serve para este caminho**. O `lancar_ec2_zona_a.sh` não anexa key pair nenhum, e uma chave SSH **só pode ser associada no momento em que a instância nasce** — não dá para acrescentar depois. Então este caminho usa uma **segunda instância**, criada só para a demonstração, que foi o que fiz no laboratório original (`bia-dev-ssh`).
+> ⚠ **Leia antes de começar:** a instância lançada na [Etapa 8](#etapa-8--lançar-a-ec2-bia-dev-via-script) **não serve para este caminho**. O `lancar_ec2_zona_a.sh` não anexa key pair nenhum, e uma chave SSH **só pode ser associada no momento em que a instância nasce** — não dá para acrescentar depois. Então este caminho usa uma **segunda instância**, criada só para a demonstração, que foi o que fiz no laboratório original (`bia-dev-ssh`).
 >
 > Se o seu objetivo é só cumprir o desafio pelo caminho recomendado, pule para a [Etapa 10](#etapa-10--rodar-a-aplicação-bia-na-ec2) — o 9A já entrega o acesso à máquina.
 
@@ -830,7 +830,7 @@ chmod 400 ~/formacao.pem
 find / -name "formacao.pem" 2>/dev/null
 ```
 
-> ⚠️ **Nunca versione um `.pem`.** O `.gitignore` deste repositório já bloqueia `*.pem`, `*.ppk` e `*.csv`.
+> ⚠ **Nunca versione um `.pem`.** O `.gitignore` deste repositório já bloqueia `*.pem`, `*.ppk` e `*.csv`.
 
 **3. Security Group dedicado:** `EC2` → `Security Groups` → `Create security group`
 
@@ -897,7 +897,7 @@ A porta **22** no `$SSH_CLIENT` é o carimbo: essa sessão entrou pelo SSH, não
 
 ## Etapa 10 — Rodar a aplicação BIA na EC2
 
-> **Onde executar:** ☁️ EC2, dentro da sessão aberta na Etapa 9 · **Tempo:** ~5 min
+> **Onde executar:** ☁ EC2, dentro da sessão aberta na Etapa 9 · **Tempo:** ~5 min
 
 **Por que esta etapa existe:** é a carga de trabalho — o que justifica toda a infraestrutura montada até aqui.
 
@@ -928,7 +928,7 @@ http://203.0.113.10:3001
 
 ![Aplicação BIA no ar](imagens/Lancar_maquina_de_trabalho_bia-dev.png)
 
-> ⚠️ **A página não abre?** Cheque nesta ordem:
+> ⚠ **A página não abre?** Cheque nesta ordem:
 >
 > 1. O contêiner `bia` está `Up` com `0.0.0.0:3001->8080/tcp` no `docker compose ps`.
 > 2. O Security Group `bia-dev` da [Etapa 5](#etapa-5--criar-o-security-group-bia-dev) libera TCP 3001.
@@ -969,7 +969,7 @@ aws ecr get-login-password --region us-east-1 --profile formacao_aws \
 Login Succeeded
 ```
 
-> ⚠️ **Erro de `docker: command not found` ou de daemon?** A integração do Docker Desktop com o WSL não está ligada. Volte à [Etapa 0](#etapa-0--preparar-o-windows-wsl-2-e-docker-desktop) ou veja [6.3](#63-docker-invisível-dentro-do-wsl).
+> ⚠ **Erro de `docker: command not found` ou de daemon?** A integração do Docker Desktop com o WSL não está ligada. Volte à [Etapa 0](#etapa-0--preparar-o-windows-wsl-2-e-docker-desktop) ou veja [6.3](#63-docker-invisível-dentro-do-wsl).
 
 ### 3. Build, tag e push
 
