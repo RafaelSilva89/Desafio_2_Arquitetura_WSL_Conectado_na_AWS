@@ -106,11 +106,11 @@ Ao final das 12 etapas você terá:
 
 ## 2. 🗺 Roadmap da solução
 
-O desafio inteiro é um ciclo de três tempos: **construir localmente**, **provar identidade e subir a carga**, **publicar a imagem**. As 13 etapas da Parte B são o detalhamento desses três tempos.
+O desafio inteiro é um ciclo de três tempos: **construir localmente**, **provar identidade e subir a carga**, **publicar a imagem**. As 13 etapas da Parte B são o detalhamento desses três tempos — e o mapa abaixo mostra a jornada completa de uma vez só.
 
-![Ciclo de vida da aplicação containerizada: desenvolvimento local, autenticação e build, e push da imagem no ECR](imagens/Roadmap_ciclo_de_vida.png)
+![Roadmap completo do desafio: do problema de hardware e do objetivo, passando pela validação de pré-requisitos e pelas nove etapas de execução, até a integração, a segurança e o resultado final](imagens/Guia_de_Arquitetura_de_Nuvem.png)
 
-*Recorte do infográfico do desafio, gerado com apoio de IA.*
+> 🤖 **Sobre este infográfico:** ele foi gerado com apoio de IA e serve como **mapa visual**, não como referência de comandos — alguns nomes de comando aparecem com erros de digitação (`aws log1n`, `nc2-user`). **Os comandos corretos e testados são os das Etapas 0 a 12 deste README**, que é sempre a fonte autoritativa.
 
 | Fase | Etapas | Tempo no ciclo | O que entrega | Termina quando |
 | --- | :-: | --- | --- | --- |
@@ -165,6 +165,10 @@ E todos os identificadores nos exemplos são **fictícios**. Substitua pelos seu
 ## 4. Os dois conceitos que sustentam tudo
 
 Antes do primeiro comando, entenda o conceito que sustenta o desafio inteiro — e que explica **todos** os erros que você pode encontrar pelo caminho. Todo acesso na AWS passa por **duas camadas independentes e sequenciais**:
+
+![Os dois pilares da nuvem: o Gate 1 de comunicação, com o Security Group agindo como cancela de rede, e o Gate 2 de autorização, com o IAM conferindo o crachá da identidade](imagens/slides/pilares-sg-vs-iam.jpg)
+
+A cancela responde *"quem pode falar com quem?"*; o crachá responde *"quem pode fazer o quê?"*. Em texto, a mesma ideia:
 
 ```text
 ┌──────────────────────────────────────────────────────────────┐
@@ -454,6 +458,8 @@ Retorno sem erro — mesmo que a lista venha vazia — significa comunicação e
 ### Por que `aws login` e não `aws configure`
 
 Access Keys são credenciais de **longa duração**: quem as obtém acessa a conta indefinidamente. No fim de 2025 a AWS liberou um mecanismo mais seguro, e foi para ele que este laboratório migrou.
+
+![A evolução da identidade: a Access Key como chave enferrujada de duração indefinida, contra o crachá temporário do AWS Login, válido por 12 horas e rotacionado a cada 15 minutos](imagens/slides/evolucao-da-identidade.jpg)
 
 | | Access Keys (`aws configure`) | `aws login` |
 | --- | --- | --- |
@@ -790,6 +796,8 @@ ssm-user    3805    3792           \_ sh
 ```
 
 A presença de **`/usr/bin/ssm-session-worker`** é a prova categórica: a conexão foi estabelecida pelo Systems Manager, **sem a porta 22 aberta para a internet**.
+
+![Raio-X da conexão: a árvore de processos do amazon-ssm-agent até o ssm-session-worker criado exclusivamente para a sessão, provando que o túnel partiu de dentro da EC2](imagens/slides/prova-do-tunel-ssm.jpg)
 
 ```text
 amazon-ssm-agent  (PID 1427) ─ serviço base, escuta pedidos de conexão da AWS
@@ -1133,6 +1141,8 @@ E confira o `Billing` → `Cost Explorer` no console nos dias seguintes, para co
 
 ## 5. Checklist de entrega
 
+![Checklist de validação final, dividido entre Fundação e Segurança e Deploy e Aplicação, com os dez itens do desafio marcados como concluídos](imagens/slides/checklist-validacao.jpg)
+
 **Parte 1 — Fundação**
 
 - [x] AWS CLI v2 instalado e funcional no WSL — [Etapa 1](#etapa-1--instalar-a-stack-dentro-do-ubuntu)
@@ -1196,6 +1206,8 @@ export AWS_DEFAULT_REGION=us-east-1
 
 *Acontece na [Etapa 6](#etapa-6--criar-a-role-role-acesso-ssm).*
 
+![O bloqueio invisível: o erro AccessDenied, o diagnóstico duplo de contexto implícito e permissão de delegação, e a solução com AWS_PROFILE exportado e inline policy](imagens/slides/accessdenied-permissoes.jpg)
+
 ```text
 dev@wsl:~/bia$ ./scripts/criar_role_ssm.sh
 An error occurred (AccessDenied) when calling the CreateRole operation:
@@ -1254,9 +1266,7 @@ Esta parte não é necessária para executar o guia — é o registro do **porqu
 
 Essa foi a **primeira decisão técnica do desafio**, e ela nasceu de uma restrição real de recurso.
 
-![Notebook com 8 GB de RAM e processador i3, e duas VMs tradicionais descartadas por consumo excessivo de recursos](imagens/Restricao_hardware_wsl.png)
-
-*A restrição que descartou a VM tradicional. Recorte do infográfico do desafio, gerado com apoio de IA.*
+![Comparação entre VirtualBox, com Windows e Ubuntu completos disputando memória, e WSL 2, com o Ubuntu compartilhando o kernel do Windows e uma engine Docker única](imagens/slides/wsl2-vs-virtualbox.jpg)
 
 | Item | Especificação |
 | --- | --- |
@@ -1286,6 +1296,8 @@ O WSL 2 compartilha o kernel e faz alocação dinâmica de memória, e o Docker 
 Resultado prático: o mesmo aprendizado e a mesma superfície de comandos Linux, por uma fração do custo de memória — **adaptar a ferramenta à restrição sem abrir mão do objetivo de aprendizagem**. Todas as referências a "sua VM" neste guia correspondem à estação **WSL 2 + Ubuntu 24.04 LTS**.
 
 ### 7.2. SSM × SSH: o comparativo completo
+
+![Comparativo entre SSH tradicional e AWS SSM, e o paradigma do túnel outbound, em que o agente dentro da EC2 inicia a conexão com o Systems Manager](imagens/slides/ssm-vs-ssh.jpg)
 
 | Característica | SSH tradicional | AWS SSM (Session Manager) |
 | --- | --- | --- |
@@ -1354,7 +1366,8 @@ Publicar um laboratório de nuvem exige o mesmo cuidado que operá-lo. O que foi
 | **Anotações brutas fora do Git** | O arquivo de notas originais, que contém os dados reais, está no `.gitignore` |
 | **Prints originais fora do Git** | Guardados localmente em `_originais_privados/`, também ignorado |
 | **PDFs de apoio fora do Git** | Os PDFs usados como material de estudo exibem o Account ID e IDs de instância **reais**, sem tarja — `*.pdf` está no `.gitignore` |
-| **Infográfico completo fora do Git** | O pôster gerado por IA contém erros de escrita nos comandos (`aws log1n`, `nc2-user`) — só recortes conferidos em resolução nativa foram publicados |
+| **Slides revisados um a um** | Os slides publicados em `imagens/slides/` saíram do PDF de apoio. Os **três** que exibiam Account ID, instance ID ou Session ID reais foram **deixados de fora** — nenhum slide publicado precisou de tarja |
+| **Material gerado por IA sinalizado** | O infográfico da [seção 2](#2--roadmap-da-solução) tem erros de digitação nos comandos e está marcado como mapa visual, não como referência — os comandos válidos são os das Etapas 0 a 12 |
 
 **Débitos reconhecidos, e que ficam como próximo passo:**
 

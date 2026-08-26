@@ -2,11 +2,10 @@
 _originais_privados/
 Desafio 2.txt
 
-# PDFs de apoio (contêm Account ID e IDs de recurso REAIS, sem tarja)
+# PDFs de apoio (contêm Account ID e IDs de recurso REAIS, sem tarja).
+# Os slides publicados em imagens/slides/ foram revisados um a um: os que
+# exibiam Account ID, instance ID ou Session ID reais ficaram de fora.
 *.pdf
-
-# Infográfico gerado por IA: contém erros de escrita nos comandos
-imagens/Guia_de_Arquitetura_de_Nuvem.png
 
 # ---- Credenciais e chaves ----
 *.pem
