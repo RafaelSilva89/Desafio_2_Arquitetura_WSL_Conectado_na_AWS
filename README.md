@@ -18,6 +18,8 @@ Ele foi escrito para ser **seguido**, não apenas lido. As **Etapas 0 a 12** est
 
 Se você nunca mexeu com AWS, comece pela [seção 3](#3-pré-requisitos-custo-e-convenções) e siga em linha reta. Se você só quer entender **por que** cada decisão foi tomada, pule para [Decisões técnicas e o que aprendi](#7-decisões-técnicas-e-o-que-aprendi).
 
+> 🧭 **Prefere executar com um checklist do lado?** O arquivo [`guia-desafio-2.html`](guia-desafio-2.html) traz estas mesmas etapas como roteiro interativo — comando, resposta esperada e caixas de verificação por passo, com o progresso salvo no navegador. Baixe e abra no navegador. Este README continua sendo a fonte autoritativa dos comandos.
+
 ---
 
 ## Índice
